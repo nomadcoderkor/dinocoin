@@ -26,5 +26,57 @@ func (b blockchain) addBlock(data string){
 * 위 예제는 addBlock 함수가 아니라 blockchain이 갖게 되는 메소드가 된것이다.
   다른곳에서 __blockchain.addBlock__와 같은 형태로 쓰이게 된다.
 
+## Package Sync
+> Once는 정확히 단 한번만 수행하는 객체이다
+```go
+// channel을 통한 방법 (sync.Once 사용 전)
+// 목적은 초기화는 한 번만 수행하고, 모든 분산 처리 고루틴이 이 초기화를 하고 나서 수행되어야 하는 경우!
+func main() {
+    done := make(chan struct{})
+    go func() { // 초기화 진행용 고루틴! 한번만 수행
+        defer close(done)   // 고루틴 종료 전, 채널로 데이터(=시그널) 전송
+        fmt.Println("Init") // 초기화 진행
+    }()
+ 
+    var wg sync.WaitGroup
+    for i := 0; i < 3; i++ {
+        wg.Add(1)        // WaitGroup에 고루틴 등록
+        go func(i int) { // 분산 처리 고루틴, 초기화 진행용 고루틴 이후에 진행
+            defer wg.Done()               // 고루틴 종료 전, 고루틴 종료 시그널 발생
+            <-done                        // 채널로부터 데이터(=시그널) 수신
+            fmt.Println("Goroutine: ", i) // 개별 고루틴 진행
+        }(i)
+    }
+    wg.Wait() // 모든 고루틴 종료될 때까지 대기(blocking)
+}
+
+// 초기화 진행용 고루틴에서는 초기화를 단한번만 수행하도록 한다
+// 그러기 위해서 먼저 초기화 진행 후 미리 만들어놓은 channel(done)을 통해 데이터(=시그널, close)을 전송한다
+// channel(done)을 통해 수신 받은(=시그널, close) 고루틴에서는 그(초기화) 이후에 작업을 수행한다
+
+==================================================================================
+// sync.Once 통한 방법
+// 목적은 초기화는 한 번만 수행하고, 모든 분산 처리 고루틴이 이 초기화를 하고 나서 수행되어야 하는 경우!
+// sync.Once을 활용한 방법으로 전체소스를 보면,
+func main() {
+    var once sync.Once    // Once 객체 생성
+    var wg sync.WaitGroup // WaitGroup 객체 생성
+    for i := 0; i < 3; i++ {
+        wg.Add(1)        // 고루틴 등록
+        go func(i int) { // 개별 고루틴 생성 및 수행
+            defer wg.Done()  // 고루틴 종료 시그널
+            once.Do(func() { // 한번만 실행하게끔 Do() 메서드 수행
+                fmt.Println("Init") // 한번만 실행될 내용
+            })
+            fmt.Println("Goroutine: ", i) // 개별 고루틴 수행
+        }(i)
+    }
+    wg.Wait() // 모든 고루틴 종료까지 Wait
+}
+// 목적은 위 channel 방식과 같다
+// 중요한것은 once.Do() 내용이다
+// 보면 개별 고루틴이 3개 수행되는데, 개별 고루틴 안에 once.Do(...)내용이 들어가 있다
+// 하지만 몇개의 고루틴이 수행되던간에 once.Do(...) 한번만 수행된다는 것이다
+```
 
 
