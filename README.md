@@ -79,4 +79,19 @@ func main() {
 // 하지만 몇개의 고루틴이 수행되던간에 once.Do(...) 한번만 수행된다는 것이다
 ```
 
+---
 
+## Css를 쉽게 적용하기 위해서 MVP.css 사용 (외국애들은 참 무료로 잘 풀어 놓는것 같다 ㅎ)
+
+[MVP.css Link](https://andybrewer.github.io/mvp/)
+
+---
+
+## Go에서 UI(html) 연결하기
+
+  1. html 파일을 직접연결 하여 사용
+      * [잘 정리된 블로그 LINK](https://dksshddl.tistory.com/entry/Go-web-programming-%ED%85%9C%ED%94%8C%EB%A6%BF%EA%B3%BC-%ED%85%9C%ED%94%8C%EB%A6%BF-%EC%97%94%EC%A7%84)
+
+  2. Header, Content, Footer 재사용을위한 설정
+      * Partials 이라는 것이 있다.
+        - [Golang Web - Render Partial HTML Template Link Click](https://dev.to/egaprsty/golang-web-render-partial-html-template-3h1m)
