@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/nomadcoderkor/dinocoin/utils"
+
 	"github.com/nomadcoderkor/dinocoin/blockchain"
 )
 
@@ -28,6 +30,11 @@ type URLDescription struct {
 	Payload     string `json:"payload,omitempty"`
 }
 
+// AddBlockBody Add block Post blocks API
+type AddBlockBody struct {
+	Message string
+}
+
 func (u URLDescription) String() string {
 	return "return string"
 }
@@ -41,12 +48,17 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 		},
 		{
 			URL:         URL("/blocks"),
-			Method:      "POST",
-			Description: "Create Block",
-			Payload:     "Data :: Payload",
+			Method:      "GET",
+			Description: "See All Block",
 		},
 		{
 			URL:         URL("/blocks"),
+			Method:      "POST",
+			Description: "Create Block",
+			Payload:     "data:string",
+		},
+		{
+			URL:         URL("/blocks/{id}"),
 			Method:      "GET",
 			Description: "See A Block",
 		},
@@ -64,12 +76,17 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 		data := blockchain.GetBlockchain().AllBlocks()
 		rw.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(rw).Encode(data)
-	}
 	case "POST":
-		data := blockchain.GetBlockchain().AllBlocks()
-		rw.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(rw).Encode(data)
+		var addBlockBody AddBlockBody
+		// 아래 코드는 post로 받은 메세지를 addBlockBody에 바인딩을 해준다는 의미
+		// 포인터를 사용한 이유는 Decode 함수는 포인터를 받게 되어있다.
+		utils.HandleErr(json.NewDecoder(r.Body).Decode(&addBlockBody))
+
+		blockchain.GetBlockchain().AddBlock(addBlockBody.Message)
+
+		rw.WriteHeader(http.StatusCreated)
 	}
+
 }
 
 func main() {
