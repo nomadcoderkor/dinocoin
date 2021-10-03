@@ -1,0 +1,45 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/nomadcoderkor/dinocoin/explorer"
+)
+
+func usage() {
+	fmt.Printf("Dino Coin에 오신걸 환영합니다.\n")
+	fmt.Printf("아래의 명령어를 사용해 주세요.\n")
+	fmt.Printf("explorer: Start HTML Explorer.\n")
+	fmt.Printf("rest: Start REST API(권장).\n")
+	os.Exit(0)
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		usage()
+	}
+
+	rest := flag.NewFlagSet("rest", flag.ExitOnError)
+	portFlag := rest.Int("port", 4000, "Sets the port of the server")
+
+	switch os.Args[1] {
+	case "explorer":
+		fmt.Println("Start Explorer")
+		explorer.Start(3000)
+	case "rest":
+		fmt.Println("Start Rest API")
+		rest.Parse(os.Args[2:])
+		// rest.Start(4000)
+	default:
+		usage()
+	}
+
+	if rest.Parsed() {
+		fmt.Println(portFlag)
+		fmt.Println("Start Server")
+	}
+	fmt.Println(*portFlag)
+
+}

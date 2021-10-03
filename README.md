@@ -10,7 +10,7 @@
 
 ---
 
-## 개발 중간중간 정리를 하면서 넘어간다.
+## 개발 중간중간 정리를 하면서 넘어간다
 
 > Go는 class를 갖고 있지 않습니다. 그러나 타입과 위에 method를 정의할 수 있습니다.
 > method는 특별한 receiver arguments를 갖고 있는 함수입니다.
@@ -25,8 +25,8 @@ func (b blockchain) addBlock(data string){
 }
 ```
 
-* 위에 보이는것과 같이 함수명 앞에 타입과 변수명이 붙은것을 Receiver라고 부른다.   
-  리시버가 붙으면 더이상 함수가 아니라 메소드가 된다. 
+* 위에 보이는것과 같이 함수명 앞에 타입과 변수명이 붙은것을 Receiver라고 부른다.
+  리시버가 붙으면 더이상 함수가 아니라 메소드가 된다.
 * 위 예제는 addBlock 함수가 아니라 blockchain이 갖게 되는 메소드가 된것이다.
   다른곳에서 __blockchain.addBlock__와 같은 형태로 쓰이게 된다.
 
@@ -128,7 +128,7 @@ func main() {
   }
   ```
 
-  자세한 내용은 아래 링크에서 확인   
+  자세한 내용은 아래 링크에서 확인
 
   [GO Lang 공식 문서 링크](https://pkg.go.dev/encoding/json#Marshal)
 
@@ -164,3 +164,9 @@ func main() {
 
 strconv.Atoi(**String**)
 
+### flag package
+
+* CLI 구축을 도와주는 Package
+* [flag package document](https://pkg.go.dev/flag)
+
+> Go로 CLI를 만드는 Framework cobra [Cobra GitHub Link](https://github.com/spf13/cobra)

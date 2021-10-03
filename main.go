@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/nomadcoderkor/dinocoin/rest"
+	"github.com/nomadcoderkor/dinocoin/cli"
 )
 
 func main() {
-	// go explorer.Start(3000)
-	rest.Start(4000)
+	cli.Start()
 }
