@@ -144,3 +144,23 @@ func main() {
 > 해당파일로 API 테스트 코드를 작성
 > 사용방법은 검색을 통해 해보면 아주 좋은 Extention 이라는 것을 알수 있다.
 
+---
+
+### Multiplexer
+
+[링크로가서 잘 보세요](https://dejavuqa.tistory.com/314)
+
+### Gorilla mux
+
+> Go 기본 패키지에 없는 다양한 기능들을 가지고 있는 Lib 이다.
+> 차근차근 Study를 해봐야 한다.. 할게 많다..
+> 사용을 위해서 go get -u github.com/gorilla/mux 명령어로 설치가 가능하다.
+
+* [Gorilla mux Git hub](https://github.com/gorilla/mux)
+* [Gorilla mux Web](https://www.gorillatoolkit.org)
+* adapter 패턴도 함께 더 봐야할 부분이다.
+
+### Go Lang Type Converter
+
+strconv.Atoi(**String**)
+
