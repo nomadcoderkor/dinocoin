@@ -23,11 +23,10 @@ func DB() *bolt.DB {
 		err = db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte(dataBucket))
 			utils.HandleErr(err)
-			_, err := tx.CreateBucketIfNotExists([]byte(blocksBucket))
+			_, err = tx.CreateBucketIfNotExists([]byte(blocksBucket))
 			return err
 		})
 		utils.HandleErr(err)
-
 	}
 	return db
 }
