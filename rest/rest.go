@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -65,7 +64,7 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Payload:     "data:string",
 		},
 		{
-			URL:         url("/blocks/{height}"),
+			URL:         url("/blocks/{hash}"),
 			Method:      "GET",
 			Description: "See A Block",
 		},
@@ -87,32 +86,32 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 func blocks(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		data := blockchain.GetBlockchain().AllBlocks()
+		json.NewEncoder(rw).Encode(blockchain.Blockchain().Blocks())
 		// rw.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(rw).Encode(data)
+		// json.NewEncoder(rw).Encode(data)
 	case "POST":
 		var addBlockBody addBlockBody
 		// 아래 코드는 post로 받은 메세지를 addBlockBody에 바인딩을 해준다는 의미
 		// 포인터를 사용한 이유는 Decode 함수는 포인터를 받게 되어있다.
 		utils.HandleErr(json.NewDecoder(r.Body).Decode(&addBlockBody))
 
-		blockchain.GetBlockchain().AddBlock(addBlockBody.Message)
+		blockchain.Blockchain().AddBlock(addBlockBody.Message)
 
 		rw.WriteHeader(http.StatusCreated)
 	}
 
 }
 
-func getBlock(rw http.ResponseWriter, r *http.Request) {
+func block(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// id := vars["height"]
 	// rw.WriteHeader(http.StatusOK)
 	// fmt.Fprintf(rw, "ID: %v\n", vars["id"])
-	id, err := strconv.Atoi(vars["height"])
-	utils.HandleErr(err)
-	block, err := blockchain.GetBlockchain().GetBlock(id)
+	// id, err := strconv.Atoi(vars["height"])
+	hash := vars["hash"]
+	block, err := blockchain.FindBlock(hash)
 	encoder := json.NewEncoder(rw)
-	if err == blockchain.ErrNotFound {
+	if err == blockchain.ErrorNotFound {
 		encoder.Encode(errorResponse{fmt.Sprint(err)})
 	} else {
 		encoder.Encode(block)
@@ -133,7 +132,7 @@ func Start(aPort int) {
 	router.Use(jsonContentTypeMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
-	router.HandleFunc("/blocks/{height:[0-9]+}", getBlock).Methods("GET")
+	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	fmt.Printf("Start Server http://localhost%s", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", aPort), router))
 

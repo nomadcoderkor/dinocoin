@@ -3,7 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"os"
+	"runtime"
 
 	"github.com/nomadcoderkor/dinocoin/explorer"
 	"github.com/nomadcoderkor/dinocoin/rest"
@@ -14,7 +14,7 @@ func usage() {
 	fmt.Printf("아래의 명령어를 사용해 주세요.\n")
 	fmt.Printf("-port: Start HTML Explorer.\n")
 	fmt.Printf("-mode: Choose between 'html' and 'rest'.\n")
-	os.Exit(0)
+	runtime.Goexit()
 }
 
 // Start CLI start function

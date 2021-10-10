@@ -180,4 +180,34 @@ strconv.Atoi(**String**)
 > **go get github.com/boltdb/bolt** 명령어로 쉽게 설치가 된다.   
 > Go Lang에서 외부 패키지 설치는 참 간편하다.
 
+### Bolt Browser
+
+* bolt db Browser
+  
+  ```cli
+  go get github.com/br0xen/boltbrowser
+  ```
+
+* boltbrowser 설치하고 만약 명령어 안되는 분들은 환경변수에 GOPATH 추가 돼 있는지 확인하면 될 것 같아요  
+  echo \$PATH 확인하셔서 GOPATH 추가 안 돼 있을 경우   
+  bash 쓰시는 분은 vi ~/.bash_profile   
+  zsh 쓰시는 분은 vi ~/.zshrc   
+  들어가셔서   
+  export GOPATH=\$HOME/go   
+  export PATH=\$PATH:$GOPATH/bin   
+  입력하고 저장 하시고 나오셔서   
+  source ~/.bash_profile   
+  or   
+  source ~/.zshrc   
+  하시고 다시 echo $PATH 로 GOPATH 제대로 추가 됐는지 확인하시고   
+  boltbrowser 사용 하시면 될 것 같아요     
+
+* boltdbweb 설치하고 실행하면 웹브라우져에서 db를 볼수 있어요   
+  [GIT HUB LINK](https://github.com/evnix/boltdbweb)
+
+  ```command
+  go get github.com/evnix/boltdbweb
+  ```
+
+---
 
