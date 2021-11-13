@@ -1,61 +1,71 @@
 package blockchain
 
 import (
-	"crypto/sha256"
 	"errors"
-	"fmt"
+	"strings"
+	"time"
 
 	"github.com/nomadcoderkor/dinocoin/db"
 	"github.com/nomadcoderkor/dinocoin/utils"
 )
 
-// Block Define
+// Block export
 type Block struct {
-	Data     string `json:"data"`
-	Hash     string `json:"hash"`
-	PrevHash string `json:"prevHash,omitempty"`
-	Height   int    `json:"height"`
+	Hash         string `json:"hash"`
+	PrevHash     string `json:"prevHash,omitempty"`
+	Height       int    `json:"height"`
+	Difficulty   int    `json:"difficulty"`
+	Nonce        int    `json:"nonce"`
+	Timestamp    int    `json:"timestamp"`
+	Transactions []*Tx  `json:"transactions"`
 }
-
-// func (b *Block) toBytes() []byte {
-// 	var blockBuffer bytes.Buffer
-// 	encoder := gob.NewEncoder(&blockBuffer)
-// 	err := encoder.Encode(b)
-// 	utils.HandleErr(err)
-// 	return blockBuffer.Bytes()
-// }
 
 func (b *Block) persist() {
 	db.SaveBlock(b.Hash, utils.ToBytes(b))
 }
 
+// ErrNotFound export
+var ErrNotFound = errors.New("block not found")
+
 func (b *Block) restore(data []byte) {
 	utils.FromBytes(b, data)
 }
 
-// ErrorNotFound Find block not found Error Message
-var ErrorNotFound = errors.New("Block not found")
-
-// FindBlock 해쉬값으로 블록 정보를 찾는다.
+// FindBlock Export
 func FindBlock(hash string) (*Block, error) {
-	blockByte := db.Block(hash)
-	if blockByte == nil {
-		return nil, ErrorNotFound
+	blockBytes := db.Block(hash)
+	if blockBytes == nil {
+		return nil, ErrNotFound
 	}
 	block := &Block{}
-	block.restore(blockByte)
+	block.restore(blockBytes)
 	return block, nil
 }
 
-func createBlock(data string, prevHash string, height int) *Block {
-	block := &Block{
-		Data:     data,
-		Hash:     "",
-		PrevHash: prevHash,
-		Height:   height,
+func (b *Block) mine() {
+	target := strings.Repeat("0", b.Difficulty)
+	for {
+		b.Timestamp = int(time.Now().Unix())
+		hash := utils.Hash(b)
+		if strings.HasPrefix(hash, target) {
+			b.Hash = hash
+			break
+		} else {
+			b.Nonce++
+		}
 	}
-	payload := block.Data + block.PrevHash + fmt.Sprint(block.Height)
-	block.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(payload)))
+}
+
+func createBlock(prevHash string, height int, diff int) *Block {
+	block := &Block{
+		Hash:       "",
+		PrevHash:   prevHash,
+		Height:     height,
+		Difficulty: diff,
+		Nonce:      0,
+	}
+	block.mine()
+	block.Transactions = Mempool.TxToConfirm()
 	block.persist()
 	return block
 }

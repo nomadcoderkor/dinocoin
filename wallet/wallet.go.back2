@@ -1,0 +1,45 @@
+package wallet
+
+import (
+	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/hex"
+	"fmt"
+	"math/big"
+
+	"github.com/nomadcoderkor/dinocoin/utils"
+)
+
+
+
+const (
+	signature     string = "a5778dd54ba5310efce3e55bf8550bc5ddb3e749c6c2fb4957ba53648a665031ef01510979b752b1685169ac56befa6088096788792f3ba0ad908280f773bf8a"
+	privateKey    string = "307702010104206f1bab87c908adeabe19fca8e61be1df22da25aad79722c929b7ecc1aae4ecaea00a06082a8648ce3d030107a14403420004e31f8e59ccc17dcf506acd325a100f41830e5c049b2ec497e3cd53907c5eb5177accd32a7c08812496218ce5fde34cc1e4c470044457bcf5f150107bb5c87302"
+	hashedMessage string = "2f79f68e55c9115bbfda813980b36907bb301ccdce77f65e4a84d608f63fb68a"
+)
+
+// Start .
+func Start() {
+	privateByte, err := hex.DecodeString(privateKey)
+	utils.HandleErr(err)
+	private, err := x509.ParseECPrivateKey(privateByte)
+	utils.HandleErr(err)
+
+	sigBytes, err := hex.DecodeString(signature)
+	utils.HandleErr(err)
+
+	rBytes := sigBytes[:len(sigBytes)/2]
+	sBytes := sigBytes[len(sigBytes)/2:]
+
+	var bigR, bigS = big.Int{}, big.Int{}
+
+	hashBytes, err := hex.DecodeString(hashedMessage)
+	utils.HandleErr(err)
+
+	bigR.SetBytes(rBytes)
+	bigS.SetBytes(sBytes)
+
+	ok := ecdsa.Verify(&private.PublicKey, hashBytes, &bigR, &bigS)
+
+	fmt.Println(ok)
+}

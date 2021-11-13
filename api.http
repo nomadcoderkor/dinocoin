@@ -1,4 +1,8 @@
+###
 http://localhost:4000/
+
+###
+http://localhost:4000/status
 
 ### (Get)
 http://localhost:4000/blocks
@@ -6,9 +10,22 @@ http://localhost:4000/blocks
 ### (Post)
 POST http://localhost:4000/blocks
 
+### Wallet
+GET http://localhost:4000/wallet
+
+###
+http://localhost:4000/balance/chris
+
+###
+POST http://localhost:4000/transactions
+
 {
-  "message": "블록이 만들어진다~111"
+  "to": "chris",
+  "amount": 60
 }
 
 ###
-http://localhost:4000/blocks/3
+http://localhost:4000/mempool
+
+### Balance
+http://localhost:4000/balance/435f9b78bb8dc3be4c98fe861c3ddd417c30904e95f4f9f10b86c37419966b811242e0119f33241f527a38c77ea33d8ebb8300dbffa31c6fc6a54caeb97c56f5?total=true

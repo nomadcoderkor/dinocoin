@@ -21,35 +21,30 @@ type homeData struct {
 }
 
 func home(rw http.ResponseWriter, r *http.Request) {
-	// tmpl := template.Must(template.ParseFiles("templates/page/home.gohtml"))
-	// tmpl.Execute(rw, data)
-	// data := homeData{"Home", blockchain.GetBlockchain().AllBlocks()}
 	data := homeData{"Home", nil}
 	templates.ExecuteTemplate(rw, "home", data)
 }
 
 func add(rw http.ResponseWriter, r *http.Request) {
-	// data := homeData{"Home", blockchain.GetBlockchain().AllBlocks()}
-	// GET, POST 분기하여 처리
 	switch r.Method {
 	case "GET":
+		fmt.Println("Block :::: Before")
 		templates.ExecuteTemplate(rw, "add", nil)
+		fmt.Println("Block :::: After")
 	case "POST":
-		r.ParseForm()
-		data := r.Form.Get("blockData")
-		// data := r.FormValue("blockData")
-		blockchain.Blockchain().AddBlock(data)
+		fmt.Println("AddBlock :::: Before")
+		blockchain.Blockchain().AddBlock()
+		fmt.Println("AddBlock :::: After")
 		http.Redirect(rw, r, "/", http.StatusPermanentRedirect)
 	}
 }
 
-// Start Explorer start func
 func Start(port int) {
 	handler := http.NewServeMux()
 	templates = template.Must(template.ParseGlob(templateDir + "pages/*.gohtml"))
 	templates = template.Must(templates.ParseGlob(templateDir + "partials/*.gohtml"))
 	handler.HandleFunc("/", home)
 	handler.HandleFunc("/add", add)
-	fmt.Printf("Starting Server http://localhost%d\n", port)
+	fmt.Printf("Listening on http://localhost:%d\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
 }

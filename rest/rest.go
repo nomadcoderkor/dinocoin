@@ -7,24 +7,20 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
 	"github.com/nomadcoderkor/dinocoin/blockchain"
 	"github.com/nomadcoderkor/dinocoin/utils"
+	"github.com/nomadcoderkor/dinocoin/wallet"
 )
 
-// const port string = ":4000"
 var port string
 
-// URL api url type
 type url string
 
-// MarshalText Test
 func (u url) MarshalText() ([]byte, error) {
 	url := fmt.Sprintf("http://localhost%s%s", port, u)
 	return []byte(url), nil
 }
 
-// urlDescription API Description
 type urlDescription struct {
 	URL         url    `json:"url"`
 	Method      string `json:"method"`
@@ -32,17 +28,22 @@ type urlDescription struct {
 	Payload     string `json:"payload,omitempty"`
 }
 
-// addBlockBody Add block Post blocks API
-type addBlockBody struct {
-	Message string
+type balanceResponse struct {
+	Address string `json:"address"`
+	Balance int    `json:"balance"`
+}
+
+type myWalletResponse struct {
+	Address string `json:"address"`
 }
 
 type errorResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-func (u urlDescription) String() string {
-	return "return string"
+type addTxPayload struct {
+	To     string
+	Amount int
 }
 
 func documentation(rw http.ResponseWriter, r *http.Request) {
@@ -53,14 +54,19 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Description: "See Documentation",
 		},
 		{
+			URL:         url("/status"),
+			Method:      "GET",
+			Description: "See the Status of the Blockchain",
+		},
+		{
 			URL:         url("/blocks"),
 			Method:      "GET",
-			Description: "See All Block",
+			Description: "See All Blocks",
 		},
 		{
 			URL:         url("/blocks"),
 			Method:      "POST",
-			Description: "Create Block",
+			Description: "Add A Block",
 			Payload:     "data:string",
 		},
 		{
@@ -68,12 +74,39 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "See A Block",
 		},
+		{
+			URL:         url("/balance/{address}"),
+			Method:      "GET",
+			Description: "See A Balance",
+		},
 	}
-	// rw.Header().Add("Content-Type", "application/json")
-	// b, err := json.Marshal(data)
-	// utils.HandleErr(err)
-	// fmt.Fprintf(rw, "%s", b)
-	json.NewEncoder(rw).Encode(data)
+	utils.HandleErr(json.NewEncoder(rw).Encode(data))
+}
+
+func blocks(rw http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Blocks(blockchain.Blockchain())))
+	case "POST":
+		blockchain.Blockchain().AddBlock()
+		rw.WriteHeader(http.StatusCreated)
+	}
+}
+
+func block(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hash := vars["hash"]
+	block, err := blockchain.FindBlock(hash)
+	encoder := json.NewEncoder(rw)
+	if err == blockchain.ErrNotFound {
+		utils.HandleErr(encoder.Encode(errorResponse{fmt.Sprint(err)}))
+	} else {
+		utils.HandleErr(encoder.Encode(block))
+	}
+}
+
+func status(rw http.ResponseWriter, r *http.Request) {
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Blockchain()))
 }
 
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
@@ -83,57 +116,57 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func blocks(rw http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		json.NewEncoder(rw).Encode(blockchain.Blockchain().Blocks())
-		// rw.Header().Add("Content-Type", "application/json")
-		// json.NewEncoder(rw).Encode(data)
-	case "POST":
-		var addBlockBody addBlockBody
-		// 아래 코드는 post로 받은 메세지를 addBlockBody에 바인딩을 해준다는 의미
-		// 포인터를 사용한 이유는 Decode 함수는 포인터를 받게 되어있다.
-		utils.HandleErr(json.NewDecoder(r.Body).Decode(&addBlockBody))
-
-		blockchain.Blockchain().AddBlock(addBlockBody.Message)
-
-		rw.WriteHeader(http.StatusCreated)
-	}
-
-}
-
-func block(rw http.ResponseWriter, r *http.Request) {
+func balance(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	// id := vars["height"]
-	// rw.WriteHeader(http.StatusOK)
-	// fmt.Fprintf(rw, "ID: %v\n", vars["id"])
-	// id, err := strconv.Atoi(vars["height"])
-	hash := vars["hash"]
-	block, err := blockchain.FindBlock(hash)
-	encoder := json.NewEncoder(rw)
-	if err == blockchain.ErrorNotFound {
-		encoder.Encode(errorResponse{fmt.Sprint(err)})
-	} else {
-		encoder.Encode(block)
+	address := vars["address"]
+	total := r.URL.Query().Get("total")
+	switch total {
+	case "true":
+		amount := blockchain.BalanceByAddress(address, blockchain.Blockchain())
+		json.NewEncoder(rw).Encode(balanceResponse{address, amount})
+	default:
+		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.UTxOutsByAddress(address, blockchain.Blockchain())))
 	}
-
 }
 
-// Start function
+func mempool(rw http.ResponseWriter, r *http.Request) {
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Mempool.Txs))
+}
+
+func myWallet(rw http.ResponseWriter, r *http.Request) {
+	address := wallet.Wallet().Address
+	// json.NewEncoder(rw).Encode(struct {
+	// 	Address string `json:"address"`
+	// }{Address: address})
+	// utils.HandleErr(json.NewEncoder(rw).Encode(myWalletResponse{Address: address}))
+	json.NewEncoder(rw).Encode(myWalletResponse{Address: address})
+}
+
+func transactions(rw http.ResponseWriter, r *http.Request) {
+	var payload addTxPayload
+	utils.HandleErr(json.NewDecoder(r.Body).Decode(&payload))
+	err := blockchain.Mempool.AddTx(payload.To, payload.Amount)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(rw).Encode(errorResponse{err.Error()})
+		return
+	}
+	rw.WriteHeader(http.StatusCreated)
+}
+
+// Start start
 func Start(aPort int) {
-	// http.ListenAndServe(fmt.Sprintf(":%d", aPort), nil)
-	// 이부분이 두개의 포트로 서버를 뛰울때 걑은 URL이 중복될시 문제가 된다.
-	// 그래서 handler 를 만들어 수정을 한다.Í
-	// rest.go, explorer.go 두파일 모두 수정을 한다.
-	// handler := http.NewServeMux()
-	// 고릴라 mux 로 교체
 	port = fmt.Sprintf(":%d", aPort)
 	router := mux.NewRouter()
 	router.Use(jsonContentTypeMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
+	router.HandleFunc("/status", status)
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
-	fmt.Printf("Start Server http://localhost%s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", aPort), router))
-
+	router.HandleFunc("/balance/{address}", balance).Methods("GET")
+	router.HandleFunc("/mempool", mempool).Methods("GET")
+	router.HandleFunc("/wallet", myWallet).Methods("GET")
+	router.HandleFunc("/transactions", transactions).Methods("POST")
+	fmt.Printf("Listening on http://localhost%s\n", port)
+	log.Fatal(http.ListenAndServe(port, router))
 }

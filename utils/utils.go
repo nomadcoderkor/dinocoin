@@ -2,28 +2,32 @@ package utils
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
+	"fmt"
 	"log"
 )
 
-// HandleErr Error Handler
 func HandleErr(err error) {
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
-// ToBytes Interface
 func ToBytes(i interface{}) []byte {
-	var utilBuffer bytes.Buffer
-	encoder := gob.NewEncoder(&utilBuffer)
-	err := encoder.Encode(i)
-	HandleErr(err)
-	return utilBuffer.Bytes()
+	var aBuffer bytes.Buffer
+	encoder := gob.NewEncoder(&aBuffer)
+	HandleErr(encoder.Encode(i))
+	return aBuffer.Bytes()
 }
 
-// FromBytes Interface
 func FromBytes(i interface{}, data []byte) {
 	encoder := gob.NewDecoder(bytes.NewReader(data))
 	HandleErr(encoder.Decode(i))
+}
+
+func Hash(i interface{}) string {
+	s := fmt.Sprintf("%v", i)
+	hash := sha256.Sum256([]byte(s))
+	return fmt.Sprintf("%x", hash)
 }
